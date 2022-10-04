@@ -13,6 +13,7 @@ from kivy.uix.actionbar import ActionPrevious
 from kivy.uix.dropdown import DropDown
 from kivy.base import runTouchApp
 import random
+from kivy.clock import Clock
 
 
 class Container(BoxLayout):
@@ -40,14 +41,26 @@ class MyButton(Button):
      self.j = j
 
 class Bot:
-    def __init__(self, i, j, **kwargs):
+    def __init__(self, i, j, on_bot, **kwargs):
         super().__init__(**kwargs)
         self.i = i
         self.j = j
+        self.on_bot = on_bot
 
 
-    def bot_junior(self):
-        pass
+    def bot_junior(self, botom):
+        print("bot_junior")
+        btn = []
+        for i in botom:
+            if i.background_color == [1, 0, 0, 1]:
+                btn.append(i)
+        min = btn[0].text
+        btn_min = btn[0]
+        for i in btn:
+            if min > i.text:
+                min = i.text
+                btn_min = i
+        return btn_min
 
     def bot_midl(self):
         pass
@@ -65,7 +78,7 @@ class MainApp(App):
         self.player1 = Player(0)
         self.player2 = Player(0)
         self.first_press = True
-        self.first_move = random.randint(0, 1)
+        self.first_move = random.randint(1, 2)
         self.number_of_moves = 0
 
     def build(self):
@@ -165,7 +178,9 @@ class MainApp(App):
         else:
             self.pain_y(random.randint(0, self.playing_field_size - 1))
             self.dir = 0
-
+        print("bot_res")
+        self.bot_res()
+        print("после bot_res")
 
         return self.main_layout
 
@@ -215,16 +230,35 @@ class MainApp(App):
         for elements in bottuns_1:
             elements.background_color = [1, 1, 1, 1]
 
+    def bot_res(self):
+        print("Бот включен")
+        self.bot = Bot(None, None, True)
+        print("Думаю первый ход")
+        #        time.sleep(5)
+        #        if self.first_move == 2:
+        #           self.on_button_press()
+        #        self.on_button_press(self.bot.bot_junior(self.find_buttons(self.main_layout)))
+        self.bot_next_turn()
+
+    def bot_next_turn(self):
+        print("Думаю bot_next_turn")
+        bootom_list = self.find_buttons(self.main_layout)
+        btm = self.bot.bot_junior(bootom_list)
+        #        return self.bot.bot_junior(self.find_buttons(self.main_layout))
+        self.on_button_press(btm)
 
     def on_button_press(self, instance):
         if instance.text != "X" and instance.background_color == [1, 0, 0, 1]:
             self.number_of_moves += 1
             if self.first_move == 1:
+                print("Ход игрока - ", self.first_move)
                 self.player1.score += int(instance.text)
                 self.first_move = 2
                 self.player1_score_label.text = f"Player 1 score {self.player1.score}"
                 self.turn_label.text = f"Turn - Player {self.first_move}"
+                Clock.schedule_once(lambda _: self.bot_next_turn(), 5)
             else:
+                print("Ход бота", self.first_move)
                 self.player2.score += int(instance.text)
                 self.first_move = 1
                 self.player2_score_label.text = f"Player 2 score {self.player2.score}"
