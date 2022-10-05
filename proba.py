@@ -1,17 +1,8 @@
 from kivy.app import App
-from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
-from kivy.uix.stacklayout import StackLayout
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
-from kivy.uix.textinput import TextInput
-from kivy.uix.actionbar import ActionBar
-from kivy.uix.actionbar import ActionView
-from kivy.uix.actionbar import ActionButton
-from kivy.uix.actionbar import ActionPrevious
 from kivy.uix.dropdown import DropDown
-from kivy.base import runTouchApp
 import random
 from kivy.clock import Clock
 
@@ -21,13 +12,13 @@ class Container(BoxLayout):
         super(Container, self).__init__(**kwargs)
         self.menu()
 
-    def menu(self):
-        menu = ActionBar()
-        aw = ActionView()
-        #bt = ActionButton()
-        menu.add_widget(aw)
-        #aw.add_widget(bt)
-        self.add_widget(menu)
+    # def menu(self):
+    #     menu = ActionBar()
+    #     aw = ActionView()
+    #
+    #     menu.add_widget(aw)
+    #     #aw.add_widget(bt)
+    #     self.add_widget(menu)
 
 
 class Player:
@@ -49,7 +40,7 @@ class Bot:
 
 
     def bot_junior(self, botom):
-        print("bot_junior")
+        print("bot_junior", botom)
         btn = []
         for i in botom:
             if i.background_color == [1, 0, 0, 1]:
@@ -72,7 +63,7 @@ class MainApp(App):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.main_layout = None
-        self.playing_field_size = 3
+        self.playing_field_size = None
         self.dir = random.randint(0, 1)
         self.color = [1, 0, 0, 1]
         self.player1 = Player(0)
@@ -80,6 +71,7 @@ class MainApp(App):
         self.first_press = True
         self.first_move = random.randint(1, 2)
         self.number_of_moves = 0
+        self.bot = None
 
     def build(self):
         self.operators = ["/", "*", "+", "-"]
@@ -88,6 +80,7 @@ class MainApp(App):
         self.playing_field_size = 5
         self.first_press = True
         self.first_move = random.randint(1, 2)
+        self.bot = Bot(None, None, True)
 
         self.main_layout = BoxLayout(orientation="vertical")
         self.side_layout = BoxLayout(orientation="horizontal", size_hint_y=0.1)
@@ -157,19 +150,7 @@ class MainApp(App):
             field_layout.add_widget(h_layout)
         self.main_layout.add_widget(self.side_layout)
         self.main_layout.add_widget(field_layout)
-        self.mass = button
-#        self.menu()
-#         menu = ActionBar()
-#         aw = ActionView()
-#         #bt = ActionButton()
-#         menu.add_widget(aw)
-        #aw.add_widget(bt)
-#        self.add_widget(menu)
 
-
-#        print(self.find_buttons(main_layout))
-#         self.main_layout = main_layout
-#         self.h_layout = h_layout
 
         self.pain_g()
         if self.dir == 0:
@@ -178,10 +159,11 @@ class MainApp(App):
         else:
             self.pain_y(random.randint(0, self.playing_field_size - 1))
             self.dir = 0
-        print("bot_res")
-        self.bot_res()
-        print("после bot_res")
-
+        # print("bot_res")
+        # self.bot_res()
+        # print("после bot_res")
+        if self.first_move == 2:
+            self.bot_res()
         return self.main_layout
 
     def find_buttons(self, widget):
@@ -203,7 +185,7 @@ class MainApp(App):
     def change_button(self, instance):
         ind_x = instance.i
         ind_y = instance.j
-        bottuns_1 = self.find_buttons(self.main_layout)
+#        bottuns_1 = self.find_buttons(self.main_layout)
         self.pain_g()
         if self.dir == 0:
             self.pain_x(ind_x)
@@ -232,7 +214,7 @@ class MainApp(App):
 
     def bot_res(self):
         print("Бот включен")
-        self.bot = Bot(None, None, True)
+#        self.bot = Bot(None, None, True)
         print("Думаю первый ход")
         #        time.sleep(5)
         #        if self.first_move == 2:
@@ -242,10 +224,8 @@ class MainApp(App):
 
     def bot_next_turn(self):
         print("Думаю bot_next_turn")
-        bootom_list = self.find_buttons(self.main_layout)
-        btm = self.bot.bot_junior(bootom_list)
-        #        return self.bot.bot_junior(self.find_buttons(self.main_layout))
-        self.on_button_press(btm)
+#        #        return self.bot.bot_junior(self.find_buttons(self.main_layout))
+        self.on_button_press(self.bot.bot_junior(self.find_buttons(self.main_layout)))
 
     def on_button_press(self, instance):
         if instance.text != "X" and instance.background_color == [1, 0, 0, 1]:
@@ -267,22 +247,13 @@ class MainApp(App):
             print("score", self.player1.score, self.player2.score)
             instance.text = "X"
             self.change_button(instance)
-        if self.game_over(instance.i, instance.j):
-            # buttons = []
-            # for child in self.find_buttons_all(self.main_layout):
-            #     buttons.append(child)
-#             layer = self.find_buttons_all(self.main_layout)
-#             print(len(layer[0]))
-# #            for i in range(self.playing_field_size):
-#             for bt in buttons:
-# #               for i in bt:
-#                      self.h_layout.remove_widget(bt)
+        if self.game_over():
+
             print("True")
 #            exit()
 
-    def game_over(self, l, k):
-        sum_x = 0
-        sum_y = 0
+    def game_over(self):
+
         a1 = []
         if self.number_of_moves == self.playing_field_size * self.playing_field_size:
             return True
@@ -292,13 +263,6 @@ class MainApp(App):
                 a1.append(elements)
         if len(a1) == self.playing_field_size:
             return True
-
-
-    def on_solution(self, instance):
-        text = self.solution.text
-        if text:
-            solution = str(eval(self.solution.text))
-            self.solution.text = solution
 
 
 if __name__ == "__main__":
