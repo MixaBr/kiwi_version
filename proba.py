@@ -1,15 +1,14 @@
+import random
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
+from kivy.clock import Clock
+from kivy.lang import Builder
+from kivy.logger import Logger
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-from kivy.uix.dropdown import DropDown
-import random
-from kivy.clock import Clock
-from kivy.uix.settings import SettingsWithSidebar
-from kivy.logger import Logger
 from kivy.uix.modalview import ModalView
-from kivy.lang import Builder
-from kivy.uix.checkbox import CheckBox
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.settings import SettingsWithSidebar
+
 
 # We first define our GUI
 kv = '''
@@ -40,7 +39,15 @@ json = '''
         "desc": " ",
         "section": "Game setting",
         "key": "size",
-        "options":["3x3", "5x5", "10x10"]
+        "options":["3x3", "5x5", "10x10", "15x15",  "20x20",  "25x25"]
+    },
+    {
+        "type": "options",
+        "title": "Bot power",
+        "desc": " ",
+        "section": "Game setting",
+        "key": "power",
+        "options":["Junior", "Midl", "Super"]
     }
 ]'''
 
@@ -63,20 +70,24 @@ class Player:
     def __init__(self, score):
         self.score = score
 
+
 class MyButton(Button):
-   def __init__(self, i, j, **kwargs):
-     super().__init__(**kwargs)
-     self.i = i
-     self.j = j
+    def __init__(self, i, j, **kwargs):
+        super().__init__(**kwargs)
+        self.i = i
+        self.j = j
 
 
 class MySettingsWithTabbedPanel(SettingsWithSidebar):
     def on_close(self):
         Logger.info("proba.py: MySettingsWithTabbedPanel.on_close")
+
     def on_config_change(self, config, section, key, value):
         Logger.info(
                 "proba.py: MySettingsWithTabbedPanel.on_config_change: "
                 "{0}, {1}, {2}, {3}".format(config, section, key, value))
+
+
 class Bot:
     def __init__(self, i, j, on_bot, **kwargs):
         super().__init__(**kwargs)
@@ -84,9 +95,7 @@ class Bot:
         self.j = j
         self.on_bot = on_bot
 
-
     def bot_junior(self, botom):
-        print("bot_junior", botom)
         btn = []
         for i in botom:
             if i.background_color == [1, 0, 0, 1]:
@@ -105,11 +114,21 @@ class Bot:
     def bot_super(self):
         pass
 
+
 class GameApp(App):
     use_kivy_settings = False
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.main_layout = None
+        self.side_layout = None
+        self.bootom_btn_layout = None
+        self.buttons = None
+        self.btn_new_game = None
+        self.field_layout = None
+        self.player1_score_label = None
+        self.player2_score_label = None
+        self.turn_label = None
         self.playing_field_size = None
         self.dir = random.randint(0, 1)
         self.color = [1, 0, 0, 1]
@@ -119,24 +138,37 @@ class GameApp(App):
         self.first_move = random.randint(1, 2)
         self.number_of_moves = 0
         self.bot = None
+        self.game_set = {"Player to Player": 1, "Player to Bot": 2, "OnLine": 3}
+        self.game_field = {"3x3": 3, "5x5": 5, "10x10": 10, "15x15": 15,  "20x20": 20,  "25x25": 25}
+        self.bot_power = {"Junior": 1, "Midl": 2, "Super": 3}
+        self.game_mode = None
+        self.size = None
+        self.power = None
+        self.num_game_mode = None
+        self.num_bot_power = None
 
     def build(self):
 
-        self.playing_field_size = 25
+        self.config.read("game.ini")
+        self.game_mode = self.config.get("Game setting", "game_mode")
+        self.size = self.config.get("Game setting", "size")
+        self.power = self.config.get("Game setting", "power")
+
+        self.num_game_mode = self.game_set[self.game_mode]
+        self.playing_field_size = self.game_field[self.size]
+        self.num_bot_power = self.bot_power[self.power]
+
         self.first_press = True
-        self.first_move = random.randint(1, 2)
+#        self.first_move = random.randint(1, 2)
         self.bot = Bot(None, None, True)
 
 # Создание окна игры, управляющих кнопок
         self.settings_cls = MySettingsWithTabbedPanel
         self.main_layout = Builder.load_string(kv)
-        # label = self.main_layout.ids.label
-        # label.text = self.config.get('Game setting', 'text')
-
 
         self.main_layout = BoxLayout(orientation="vertical")
         self.side_layout = BoxLayout(orientation="horizontal", size_hint_y=0.1)
-        self.bootob_btn_layout = BoxLayout(orientation="horizontal", size_hint_y=0.1)
+        self.bootom_btn_layout = BoxLayout(orientation="horizontal", size_hint_y=0.1)
         self.field_layout = BoxLayout(orientation="vertical")
 
         self.player1_score_label = Label(text=f"Player 1 score {self.player1.score}")
@@ -150,23 +182,13 @@ class GameApp(App):
         self.side_layout.add_widget(self.player1_score_label)
         self.side_layout.add_widget(self.player2_score_label)
         self.side_layout.add_widget(self.turn_label)
-        self.bootob_btn_layout.add_widget(self.btn_new_game)
+        self.bootom_btn_layout.add_widget(self.btn_new_game)
 
         self.num_create_play_fild()
         self.create_field_game()
-
-
         self.main_layout.add_widget(self.side_layout)
         self.main_layout.add_widget(self.field_layout)
-        self.main_layout.add_widget(self.bootob_btn_layout)
-
-#Эти 3 строчки нужны при изменении размера игрового поля
-        # self.del_widget_play_fild()
-        # self.playing_field_size = 20
-        # self.scr_create_play_fild()
-
-
-
+        self.main_layout.add_widget(self.bootom_btn_layout)
 
         self.pain_g()
         if self.dir == 0:
@@ -176,13 +198,22 @@ class GameApp(App):
             self.pain_y(random.randint(0, self.playing_field_size - 1))
             self.dir = 0
 
-        if self.first_move == 2:
-            self.bot_next_turn()
+        if self.num_game_mode == 1:
+            pass
+        elif self.num_game_mode == 2:
+            self.player2_score_label.text = f"Bot score {self.player2.score}"
+            if self.first_move == 2:
+                self.turn_label.text = f"Turn - Bot"
+                Clock.schedule_once(lambda _: self.bot_next_turn(), 5)
+
+        elif self.num_game_mode == 3:
+            pass
+
         return self.main_layout
 
     def num_create_play_fild(self):
-        self.buttons = [[str(random.randint(0, 9)) for i in range(0, self.playing_field_size)] for j in
-                    range(0, self.playing_field_size)]
+        self.buttons = [[str(random.randint(0, 9)) for i in range(0, self.playing_field_size)]
+                        for j in range(0, self.playing_field_size)]
 
     def del_widget_play_fild(self):
         self.field_layout.clear_widgets()
@@ -190,15 +221,20 @@ class GameApp(App):
     def scr_create_play_fild(self):
         self.num_create_play_fild()
         self.create_field_game()
+        self.dir = random.randint(0, 1)
+        self.pain_g()
+        if self.dir == 0:
+            self.pain_x(random.randint(0, self.playing_field_size - 1))
+            self.dir = 1
+        else:
+            self.pain_y(random.randint(0, self.playing_field_size - 1))
+            self.dir = 0
 
     def crate_new_play_fild(self):
         self.num_create_play_fild()
-        print(self.buttons)
         for element in self.find_buttons(self.field_layout):
 
             element.text = str(self.buttons[element.i][element.j])
-
-
 
     def new_game_p(self, x=None):
 
@@ -207,11 +243,12 @@ class GameApp(App):
         self.first_move = random.randint(1, 2)
         self.dir = random.randint(0, 1)
         self.player1_score_label.text = f"Player 1 score {self.player1.score}"
-        self.player2_score_label.text = f"Player 2 score {self.player2.score}"
         self.turn_label.text = f"Turn - Player {self.first_move}"
-
+        if self.num_game_mode == 2:
+            self.player2_score_label.text = f"Bot score {self.player2.score}"
+        else:
+            self.player2_score_label.text = f"Player 2 score {self.player2.score}"
         self.crate_new_play_fild()
-
         self.dir = random.randint(0, 1)
         self.pain_g()
         if self.dir == 0:
@@ -220,11 +257,16 @@ class GameApp(App):
         else:
             self.pain_y(random.randint(0, self.playing_field_size - 1))
             self.dir = 0
+        if self.num_game_mode == 2:
+            self.player2_score_label.text = f"Bot score {self.player2.score}"
+            if self.first_move == 2:
+                self.turn_label.text = f"Turn - Bot"
+                Clock.schedule_once(lambda _: self.bot_next_turn(), 5)
+        else:
+            self.player2_score_label.text = f"Player 2 score {self.player2.score}"
 
-        if self.first_move == 2:
-            Clock.schedule_once(lambda _: self.bot_next_turn(), 5)
-
-
+#        elif self.num_game_mode == 3:
+            pass
 
     def create_field_game(self):
         for x, row in enumerate(self.buttons):
@@ -233,49 +275,49 @@ class GameApp(App):
             for y, label in enumerate(row):
                 button = MyButton(x, y,
                                   text=label,
-                                  background_color =(1, 1, 1, 1),
+                                  background_color=(1, 1, 1, 1),
                                   pos_hint={"center_x": 0.5, "center_y": 0.5},)
                 button.bind(on_press=self.on_button_press)
                 h_layout.add_widget(button)
             self.field_layout.add_widget(h_layout)
 
-    # def build_config(self, config):
-    #     """
-    #     Set the default values for the configs sections.
-    #     """
-    #     config.setdefaults('Game setting', {'text': 'Hello', 'font_size': 20})
+    def build_config(self, config):
 
+        config.setdefaults('Game setting', {'game_mode': 'Player to Bot', 'size': '5x5', 'power':'Junior'})
 
     def build_settings(self, settings):
         settings.add_json_panel('Game setting', self.config, data=json)
 
-
     def on_config_change(self, config, section, key, value):
         Logger.info("proba.py: App.on_config_change: {0}, {1}, {2}, {3}".format(config, section, key, value))
+        if section == "Game setting":
+            if key == "game_mode":
+                self.num_game_mode = self.game_set[value]
+                if self.num_game_mode == 1:
+                    self.new_game_p()
+                elif self.num_game_mode == 2:
+                    self.new_game_p()
+                elif self.num_game_mode == 3:
+                    pass
+            elif key == "size":
+                self.playing_field_size = self.game_field[value]
+                self.del_widget_play_fild()
+                self.scr_create_play_fild()
+                self.new_game_p()
 
-        # if section == "Game setting":
-        #     if key == "bool":
-        #         print("Key menu", value)
-        #     elif key == 'bool':
-        #         self.main_layout.ids.label.font_size = float(value)
         # # if section == "Field size":
         #     if key == "text":
         #         self.main_layout.ids.label.text = value
         #     elif key == 'font_size':
-        #         self.main_layout.ids.label.font_size = float(value)
+        # #         self.main_layout.ids.label.font_size = float(value)
 
     def close_settings(self, settings=None):
         Logger.info("main.py: App.close_settings: {0}".format(settings))
         super(GameApp, self).close_settings(settings)
 
-
-
-
-
     def find_buttons(self, widget):
         buttons = []
         for child in widget.children:
-
             if isinstance(child, MyButton):
                 buttons.append(child)
             else:
@@ -318,36 +360,36 @@ class GameApp(App):
         for elements in bottuns_1:
             elements.background_color = [1, 1, 1, 1]
 
-
     def bot_next_turn(self):
-        print("Думаю bot_next_turn")
-#        #        return self.bot.bot_junior(self.find_buttons(self.main_layout))
         self.on_button_press(self.bot.bot_junior(self.find_buttons(self.main_layout)))
 
     def on_button_press(self, instance):
         if instance.text != "X" and instance.background_color == [1, 0, 0, 1]:
             self.number_of_moves += 1
             if self.first_move == 1:
-                print("Ход игрока - ", self.first_move)
                 self.player1.score += int(instance.text)
                 self.first_move = 2
                 self.player1_score_label.text = f"Player 1 score {self.player1.score}"
-                self.turn_label.text = f"Turn - Player {self.first_move}"
-                Clock.schedule_once(lambda _: self.bot_next_turn(), 5)
+
+                if self.num_game_mode == 2:
+                    self.turn_label.text = f"Turn - Bot"
+                    Clock.schedule_once(lambda _: self.bot_next_turn(), 5)
+                else:
+                    self.turn_label.text = f"Turn - Player {self.first_move}"
+
+#                    self.player2_score_label.text = f"Bot score {self.player2.score}"
             else:
-                print("Ход бота", self.first_move)
                 self.player2.score += int(instance.text)
                 self.first_move = 1
-                self.player2_score_label.text = f"Player 2 score {self.player2.score}"
-                self.turn_label.text = f"Turn - Player {self.first_move}"
-#            self.sum += int(instance.text)
-            print("score", self.player1.score, self.player2.score)
+                if self.num_game_mode == 2:
+                    self.player2_score_label.text = f"Bot score {self.player2.score}"
+                    self.turn_label.text = f"Turn - Player {self.first_move}"
+                else:
+                    self.player2_score_label.text = f"Player 2 score {self.player2.score}"
+                    self.turn_label.text = f"Turn - Player {self.first_move}"
             instance.text = "X"
             self.change_button(instance)
         if self.game_over():
-
-            print("True")
-
             winner = None
             if self.player1.score < self.player2.score:
                 winner = 'Выиграл Player 1!'
@@ -359,9 +401,6 @@ class GameApp(App):
             victory_label = Label(text=winner, font_size=50)
             popup.add_widget(victory_label)
             popup.open()
-
-
- #           exit()
 
     def game_over(self):
 
