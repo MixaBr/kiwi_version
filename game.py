@@ -80,11 +80,11 @@ class MyButton(Button):
 
 class MySettingsWithTabbedPanel(SettingsWithSidebar):
     def on_close(self):
-        Logger.info("proba.py: MySettingsWithTabbedPanel.on_close")
+        Logger.info("game.py: MySettingsWithTabbedPanel.on_close")
 
     def on_config_change(self, config, section, key, value):
         Logger.info(
-                "proba.py: MySettingsWithTabbedPanel.on_config_change: "
+                "game.py: MySettingsWithTabbedPanel.on_config_change: "
                 "{0}, {1}, {2}, {3}".format(config, section, key, value))
 
 
@@ -289,7 +289,7 @@ class GameApp(App):
         settings.add_json_panel('Game setting', self.config, data=json)
 
     def on_config_change(self, config, section, key, value):
-        Logger.info("proba.py: App.on_config_change: {0}, {1}, {2}, {3}".format(config, section, key, value))
+        Logger.info("game.py: App.on_config_change: {0}, {1}, {2}, {3}".format(config, section, key, value))
         if section == "Game setting":
             if key == "game_mode":
                 self.num_game_mode = self.game_set[value]
