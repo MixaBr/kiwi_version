@@ -57,14 +57,6 @@ class Container(BoxLayout):
         super(Container, self).__init__(**kwargs)
         self.menu()
 
-    # def menu(self):
-    #     menu = ActionBar()
-    #     aw = ActionView()
-    #
-    #     menu.add_widget(aw)
-    #     #aw.add_widget(bt)
-    #     self.add_widget(menu)
-
 
 class Player:
     def __init__(self, score):
@@ -100,11 +92,11 @@ class Bot:
         for i in botom:
             if i.background_color == [1, 0, 0, 1]:
                 btn.append(i)
-        min = btn[0].text
+        min_w = btn[0].text
         btn_min = btn[0]
         for i in btn:
-            if min > i.text:
-                min = i.text
+            if min_w > i.text:
+                min_w = i.text
                 btn_min = i
         return btn_min
 
@@ -148,7 +140,6 @@ class GameApp(App):
         self.num_bot_power = None
 
     def build(self):
-
         self.config.read("game.ini")
         self.game_mode = self.config.get("Game setting", "game_mode")
         self.size = self.config.get("Game setting", "size")
@@ -159,10 +150,9 @@ class GameApp(App):
         self.num_bot_power = self.bot_power[self.power]
 
         self.first_press = True
-#        self.first_move = random.randint(1, 2)
+
         self.bot = Bot(None, None, True)
 
-# Создание окна игры, управляющих кнопок
         self.settings_cls = MySettingsWithTabbedPanel
         self.main_layout = Builder.load_string(kv)
 
@@ -177,7 +167,7 @@ class GameApp(App):
         mainbutton = Button(text='Setting (or press F1)', size_hint_y=1)
         mainbutton.bind(on_release=app.open_settings)
         self.btn_new_game = Button(text='New Game', size_hint_y=1)
-        self.btn_new_game.bind(on_release=self.new_game_p)
+        self.btn_new_game.bind(on_release=lambda _: self.new_game_p())
         self.side_layout.add_widget(mainbutton)
         self.side_layout.add_widget(self.player1_score_label)
         self.side_layout.add_widget(self.player2_score_label)
@@ -212,8 +202,8 @@ class GameApp(App):
         return self.main_layout
 
     def num_create_play_fild(self):
-        self.buttons = [[str(random.randint(0, 9)) for i in range(0, self.playing_field_size)]
-                        for j in range(0, self.playing_field_size)]
+        self.buttons = [[str(random.randint(0, 9)) for _ in range(0, self.playing_field_size)]
+                        for __ in range(0, self.playing_field_size)]
 
     def del_widget_play_fild(self):
         self.field_layout.clear_widgets()
@@ -233,11 +223,9 @@ class GameApp(App):
     def crate_new_play_fild(self):
         self.num_create_play_fild()
         for element in self.find_buttons(self.field_layout):
-
             element.text = str(self.buttons[element.i][element.j])
 
-    def new_game_p(self, x=None):
-
+    def new_game_p(self):
         self.player1.score = 0
         self.player2.score = 0
         self.first_move = random.randint(1, 2)
@@ -265,9 +253,6 @@ class GameApp(App):
         else:
             self.player2_score_label.text = f"Player 2 score {self.player2.score}"
 
-#        elif self.num_game_mode == 3:
-            pass
-
     def create_field_game(self):
         for x, row in enumerate(self.buttons):
             h_layout = BoxLayout()
@@ -282,8 +267,7 @@ class GameApp(App):
             self.field_layout.add_widget(h_layout)
 
     def build_config(self, config):
-
-        config.setdefaults('Game setting', {'game_mode': 'Player to Bot', 'size': '5x5', 'power':'Junior'})
+        config.setdefaults('Game setting', {'game_mode': 'Player to Bot', 'size': '5x5', 'power': 'Junior'})
 
     def build_settings(self, settings):
         settings.add_json_panel('Game setting', self.config, data=json)
@@ -304,12 +288,6 @@ class GameApp(App):
                 self.del_widget_play_fild()
                 self.scr_create_play_fild()
                 self.new_game_p()
-
-        # # if section == "Field size":
-        #     if key == "text":
-        #         self.main_layout.ids.label.text = value
-        #     elif key == 'font_size':
-        # #         self.main_layout.ids.label.font_size = float(value)
 
     def close_settings(self, settings=None):
         Logger.info("main.py: App.close_settings: {0}".format(settings))
@@ -333,7 +311,6 @@ class GameApp(App):
     def change_button(self, instance):
         ind_x = instance.i
         ind_y = instance.j
-#        bottuns_1 = self.find_buttons(self.main_layout)
         self.pain_g()
         if self.dir == 0:
             self.pain_x(ind_x)
@@ -355,7 +332,6 @@ class GameApp(App):
                 elements.background_color = [1, 0, 0, 1]
 
     def pain_g(self):
-
         bottuns_1 = self.find_buttons(self.main_layout)
         for elements in bottuns_1:
             elements.background_color = [1, 1, 1, 1]
@@ -376,8 +352,6 @@ class GameApp(App):
                     Clock.schedule_once(lambda _: self.bot_next_turn(), 5)
                 else:
                     self.turn_label.text = f"Turn - Player {self.first_move}"
-
-#                    self.player2_score_label.text = f"Bot score {self.player2.score}"
             else:
                 self.player2.score += int(instance.text)
                 self.first_move = 1
@@ -403,7 +377,6 @@ class GameApp(App):
             popup.open()
 
     def game_over(self):
-
         a1 = []
         if self.number_of_moves == self.playing_field_size * self.playing_field_size:
             return True
