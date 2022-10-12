@@ -10,7 +10,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.settings import SettingsWithSidebar
 
 
-# We first define our GUI
+"""We first define our GUI"""
 kv = '''
 BoxLayout:
     orientation: 'vertical'
@@ -22,7 +22,8 @@ BoxLayout:
         text: 'Setting'
 '''
 
-# This JSON defines entries we want to appear in our App configuration screen
+"""This JSON defines entries we want to appear in our App
+configuration screen"""
 json = '''
 [
     {
@@ -52,18 +53,14 @@ json = '''
 ]'''
 
 
-class Container(BoxLayout):
-    def __init__(self, **kwargs):
-        super(Container, self).__init__(**kwargs)
-        self.menu()
-
-
 class Player:
+    """Класс описывающий свойства игрока"""
     def __init__(self, score):
         self.score = score
 
 
 class MyButton(Button):
+    """Класс описывающий свойства кнопок пользователя"""
     def __init__(self, i, j, **kwargs):
         super().__init__(**kwargs)
         self.i = i
@@ -71,16 +68,26 @@ class MyButton(Button):
 
 
 class MySettingsWithTabbedPanel(SettingsWithSidebar):
+    """Класс из фрэйм ворка Kivy, описывающий свойства и методы встроенного
+    меню настройки"""
     def on_close(self):
+        """Метод класса MySettingsWithTabbedPanel - закрытия сеанса с
+        файлом конфиг"""
         Logger.info("game.py: MySettingsWithTabbedPanel.on_close")
 
     def on_config_change(self, config, section, key, value):
+        """Метод класса MySettingsWithTabbedPanel - изменение информации
+        в конфиг файле"""
         Logger.info(
                 "game.py: MySettingsWithTabbedPanel.on_config_change: "
                 "{0}, {1}, {2}, {3}".format(config, section, key, value))
 
 
 class Bot:
+    """Класс описывающий свойства и методы Бота
+    i - координата виджета кнопки
+    j - координата виджета кнопки
+    on_bot - фдаг включения режима игры с ботом"""
     def __init__(self, i, j, on_bot, **kwargs):
         super().__init__(**kwargs)
         self.i = i
@@ -88,6 +95,9 @@ class Bot:
         self.on_bot = on_bot
 
     def bot_junior(self, botom):
+        """Метод класса Bot, описывающий выбор хода Бота
+        (наименьший вес кнопки)"""
+
         btn = []
         for i in botom:
             if i.background_color == [1, 0, 0, 1]:
@@ -101,13 +111,61 @@ class Bot:
         return btn_min
 
     def bot_midl(self):
+        """Метод класса Bot ( в разработке), описываюший выбор
+        хода Бота (наименьший вес между ходом Бота
+        и предполагаемым ходом Игрока)"""
         pass
 
     def bot_super(self):
+        """Метод класса Bot ( в разработке), описываюший выбор
+        хода Бота (наименьший вес между несколькими ходами Бота
+                и предполагаемыми ходами Игрока)"""
         pass
 
 
 class GameApp(App):
+    """Класс приложения:
+        self.main_layout - основной слой размещения виджитов
+        self.side_layout = None
+        self.bootom_btn_layout - слой размещения виджетов "кнопка"
+        self.buttons - Lists, список значений весов кнопок
+        self.btn_new_game - виджет кнопки New game
+        self.field_layout - слой размещения виджетов игрового поля
+        self.player1_score_label  - виджет класса Label для
+                            индикации набранных очков игроком 1
+        self.player2_score_label - виджет класса Label для
+                            индикации набранных очков игроком 2
+        self.turn_label - виджет класса Label для индикации
+                            очередности хода
+        self.playing_field_size - Int, переменная размера
+                            игрового поля
+        self.dir - Int, переменная выбора стобец/строка
+        self.color - переменная отрисовки цвета выделения
+                            выбранного столбца/строки
+        self.player1 - объект класса Player
+        self.player2 - объект класса Player
+        self.first_press - Bool, переменная первого нажатия на
+                        клавишу игрового поля, по умолчанию True
+        self.first_move - Int, переменная определяющая
+                            кто делает первый ход
+        self.number_of_moves - Int, переменная хранящая
+                            общее количество ходов
+        self.bot - объект класса Bot
+        self.game_set - Dict, переменная хранящая данные
+                            о настройках режимов игры
+        self.game_field - Dict, переменная хранящая данные
+                            о настройках размера игрового поля
+        self.bot_power - Dict, переменная хранящая данные
+                            о настройках режима работы бота
+        self.game_mode - Str, переменная сохранения информации
+                            о режиме игры из файла конфигурации
+        self.size - Str, переменная сохранения информации
+                            о размере игрового поля из файла конфигурации
+        self.- Str, переменная сохранения информации
+                                о режиме работы бота из файла конфигурации
+        self.num_game_mode - Int, переменная режима игры
+        self.num_bot_power - Int, переменная режима работы бота
+        """
     use_kivy_settings = False
 
     def __init__(self, **kwargs):
@@ -131,7 +189,7 @@ class GameApp(App):
         self.number_of_moves = 0
         self.bot = None
         self.game_set = {"Player to Player": 1, "Player to Bot": 2, "OnLine": 3}
-        self.game_field = {"3x3": 3, "5x5": 5, "10x10": 10, "15x15": 15,  "20x20": 20,  "25x25": 25}
+        self.game_field = {"3x3": 3, "5x5": 5, "10x10": 10, "15x15": 15, "20x20": 20,  "25x25": 25}
         self.bot_power = {"Junior": 1, "Midl": 2, "Super": 3}
         self.game_mode = None
         self.size = None
@@ -140,6 +198,7 @@ class GameApp(App):
         self.num_bot_power = None
 
     def build(self):
+        """Метод отрисовки интервейса"""
         self.config.read("game.ini")
         self.game_mode = self.config.get("Game setting", "game_mode")
         self.size = self.config.get("Game setting", "size")
@@ -202,13 +261,16 @@ class GameApp(App):
         return self.main_layout
 
     def num_create_play_fild(self):
+        """Метод создания нового списка весов кнопок"""
         self.buttons = [[str(random.randint(0, 9)) for _ in range(0, self.playing_field_size)]
                         for __ in range(0, self.playing_field_size)]
 
     def del_widget_play_fild(self):
+        """Метод удаления виджетов игрового поля"""
         self.field_layout.clear_widgets()
 
     def scr_create_play_fild(self):
+        """Метод отрисовки интерфейса игрового поля"""
         self.num_create_play_fild()
         self.create_field_game()
         self.dir = random.randint(0, 1)
@@ -221,11 +283,14 @@ class GameApp(App):
             self.dir = 0
 
     def crate_new_play_fild(self):
+        """Метод записи информации веса кнопки в виджеты кнопок"""
         self.num_create_play_fild()
         for element in self.find_buttons(self.field_layout):
             element.text = str(self.buttons[element.i][element.j])
 
     def new_game_p(self):
+        """Метод инициализации интервейса и процессов для
+        начала новой игры"""
         self.player1.score = 0
         self.player2.score = 0
         self.first_move = random.randint(1, 2)
@@ -254,6 +319,7 @@ class GameApp(App):
             self.player2_score_label.text = f"Player 2 score {self.player2.score}"
 
     def create_field_game(self):
+        """Метод размещения виджетов кнопок на игровом поле"""
         for x, row in enumerate(self.buttons):
             h_layout = BoxLayout()
 
@@ -267,12 +333,16 @@ class GameApp(App):
             self.field_layout.add_widget(h_layout)
 
     def build_config(self, config):
-        config.setdefaults('Game setting', {'game_mode': 'Player to Bot', 'size': '5x5', 'power': 'Junior'})
+        """Метод создания файла конфигурации игры при его отсутствии"""
+        config.setdefaults('Game setting',
+        {'game_mode': 'Player to Bot', 'size': '5x5', 'power': 'Junior'})
 
     def build_settings(self, settings):
+        """Метод создания панели настроек игры"""
         settings.add_json_panel('Game setting', self.config, data=json)
 
     def on_config_change(self, config, section, key, value):
+        """Метод чтения и инициализации режимов игры из меню настройки"""
         Logger.info("game.py: App.on_config_change: {0}, {1}, {2}, {3}".format(config, section, key, value))
         if section == "Game setting":
             if key == "game_mode":
@@ -290,10 +360,14 @@ class GameApp(App):
                 self.new_game_p()
 
     def close_settings(self, settings=None):
+        """Метод сохраняет настройки по умолчанию изакрывает
+        файл конфигурации"""
         Logger.info("main.py: App.close_settings: {0}".format(settings))
         super(GameApp, self).close_settings(settings)
 
     def find_buttons(self, widget):
+        """Метод построения списка виджетов-наследников
+        на игровом поле"""
         buttons = []
         for child in widget.children:
             if isinstance(child, MyButton):
@@ -303,12 +377,15 @@ class GameApp(App):
         return buttons
 
     def find_buttons_all(self, widget):
+        """Метод построения списка всех виджетов кнопок на игровом поле"""
         buttons = []
         for child in widget.children:
             buttons.append(child)
         return buttons
 
     def change_button(self, instance):
+        """Метод изменения направления отрисовки подсветки
+        столбца/строки относительно нажатой кнопки"""
         ind_x = instance.i
         ind_y = instance.j
         self.pain_g()
@@ -320,26 +397,31 @@ class GameApp(App):
             self.dir = 0
 
     def pain_x(self, x):
+        """Метод изменения цвета кнопки для выбранной строки"""
         bottuns_1 = self.find_buttons(self.main_layout)
         for elements in bottuns_1:
             if elements.i == x:
                 elements.background_color = [1, 0, 0, 1]
 
     def pain_y(self, y):
+        """Метод изменения цвета кнопки для выбранного столбца"""
         bottuns_1 = self.find_buttons(self.main_layout)
         for elements in bottuns_1:
             if elements.j == y:
                 elements.background_color = [1, 0, 0, 1]
 
     def pain_g(self):
+        """Метод устаноки цвета для всех кнопок"""
         bottuns_1 = self.find_buttons(self.main_layout)
         for elements in bottuns_1:
             elements.background_color = [1, 1, 1, 1]
 
     def bot_next_turn(self):
+        """Метод вызова обработки иммитации хода бота"""
         self.on_button_press(self.bot.bot_junior(self.find_buttons(self.main_layout)))
 
     def on_button_press(self, instance):
+        """Метод обработки нажатия кнопки"""
         if instance.text != "X" and instance.background_color == [1, 0, 0, 1]:
             self.number_of_moves += 1
             if self.first_move == 1:
@@ -377,6 +459,7 @@ class GameApp(App):
             popup.open()
 
     def game_over(self):
+        """Метод обработки окончания игры"""
         a1 = []
         if self.number_of_moves == self.playing_field_size * self.playing_field_size:
             return True
